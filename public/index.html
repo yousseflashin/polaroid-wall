@@ -1,0 +1,57 @@
+<!-- Project: Live Disposable Camera Polaroid Wall -->
+<!-- Files: index.html, camera.html, app.js (Node.js server) -->
+
+<!-- index.html (Big screen display) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Polaroid Wall</title>
+  <style>
+    body { margin: 0; background: #333; overflow: hidden; position: relative; }
+    .polaroid {
+      position: absolute;
+      width: 200px;
+      padding: 10px;
+      background: white;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      font-family: cursive;
+      transform: rotate(calc(var(--rot)*1deg));
+      transition: all 0.5s ease-in-out;
+    }
+    .polaroid img {
+      width: 100%; height: auto;
+      display: block;
+    }
+    .polaroid p {
+      margin: 0;
+      text-align: center;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    socket.on('broadcast-photo', data => {
+      const img = new Image();
+      img.src = data.img;
+
+      const div = document.createElement('div');
+      div.className = 'polaroid';
+      div.style.top = `${Math.random() * (window.innerHeight - 250)}px`;
+      div.style.left = `${Math.random() * (window.innerWidth - 200)}px`;
+      div.style.setProperty('--rot', Math.random() * 30 - 15);
+
+      const p = document.createElement('p');
+      p.textContent = data.caption || "";
+      div.appendChild(img);
+      div.appendChild(p);
+      document.body.appendChild(div);
+    });
+  </script>
+</body>
+</html>

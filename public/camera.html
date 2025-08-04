@@ -1,0 +1,59 @@
+<!-- camera.html (User input page) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snap Your Photo</title>
+  <style>
+    body { text-align: center; font-family: sans-serif; background: #f2f2f2; }
+    video { width: 90%; max-width: 400px; margin-top: 20px; border-radius: 10px; }
+    button { margin-top: 20px; font-size: 1.2rem; padding: 10px 20px; cursor: pointer; }
+    input { margin-top: 10px; padding: 8px; font-size: 1rem; width: 80%; }
+  </style>
+</head>
+<body>
+  <h2>Take Your 2 Photos</h2>
+  <video id="video" autoplay></video>
+  <br>
+  <input type="text" id="caption" maxlength="40" placeholder="Optional caption..."/>
+  <br>
+  <button id="snap">Take Photo</button>
+  <p id="status">You have 2 shots.</p>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const video = document.getElementById('video');
+    const snapBtn = document.getElementById('snap');
+    const captionInput = document.getElementById('caption');
+    const status = document.getElementById('status');
+    const socket = io();
+
+    let shotsLeft = 2;
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => alert("Camera access denied"));
+
+    snapBtn.onclick = () => {
+      if (shotsLeft <= 0) return;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      socket.emit('new-photo', {
+        img: dataUrl,
+        caption: captionInput.value.trim()
+      });
+
+      shotsLeft--;
+      status.textContent = shotsLeft > 0 ? `You have ${shotsLeft} shot(s) left.` : "No shots left. Thanks!";
+      if (shotsLeft === 0) snapBtn.disabled = true;
+    }
+  </script>
+</body>
+</html>
