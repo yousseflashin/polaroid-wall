@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code - Camera Access</title>
+  <script src="nav.js" defer></script>
+  <link rel="stylesheet" href="/qr.css" />
+</head>
+
+<body>
+  <div class="qr-container">
+    <h1 class="title">📸 Camera Access</h1>
+    <p class="subtitle">Scan the QR code below to take photos for the Polaroid Wall</p>
+
+    <div class="qr-code">
+      <canvas class="qr-image" id="qrCanvas"></canvas>
+    </div>
+
+    <div class="url-info">
+      <div class="url-text" id="cameraUrl">Loading...</div>
+    </div>
+
+    <div class="instructions">
+      <h3>📱 How to use:</h3>
+      <ol>
+        <li>Open your phone's camera app</li>
+        <li>Point it at the QR code above</li>
+        <li>Tap the notification that appears</li>
+        <li>Login with your email and take photos!</li>
+      </ol>
+    </div>
+
+    <div class="buttons">
+      <a href="/camera" class="btn btn-primary">📷 Go to Camera</a>
+    </div>
+  </div>
+
+
+  <script src="/qr.js" defer></script>
+
+</html>

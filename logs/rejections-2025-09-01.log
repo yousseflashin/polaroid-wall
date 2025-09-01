@@ -1,0 +1,21 @@
+2025-09-01 00:02:19 [[31merror[39m]: unhandledRejection: Can't reach database server at `aws-1-eu-north-1.pooler.supabase.com:5432`
+
+Please make sure your database server is running at `aws-1-eu-north-1.pooler.supabase.com:5432`.
+PrismaClientInitializationError: Can't reach database server at `aws-1-eu-north-1.pooler.supabase.com:5432`
+
+Please make sure your database server is running at `aws-1-eu-north-1.pooler.supabase.com:5432`.
+    at r (/home/youssef/work/polaroid-wall/node_modules/@prisma/client/runtime/library.js:112:2770)
+2025-09-01 00:02:19 [[31merror[39m]: unhandledRejection: Can't reach database server at `aws-1-eu-north-1.pooler.supabase.com:5432`
+
+Please make sure your database server is running at `aws-1-eu-north-1.pooler.supabase.com:5432`.
+PrismaClientInitializationError: Can't reach database server at `aws-1-eu-north-1.pooler.supabase.com:5432`
+
+Please make sure your database server is running at `aws-1-eu-north-1.pooler.supabase.com:5432`.
+    at r (/home/youssef/work/polaroid-wall/node_modules/@prisma/client/runtime/library.js:112:2770)
+2025-09-01 00:02:19 [[31merror[39m]: unhandledRejection: Can't reach database server at `aws-1-eu-north-1.pooler.supabase.com:5432`
+
+Please make sure your database server is running at `aws-1-eu-north-1.pooler.supabase.com:5432`.
+PrismaClientInitializationError: Can't reach database server at `aws-1-eu-north-1.pooler.supabase.com:5432`
+
+Please make sure your database server is running at `aws-1-eu-north-1.pooler.supabase.com:5432`.
+    at r (/home/youssef/work/polaroid-wall/node_modules/@prisma/client/runtime/library.js:112:2770)
