@@ -7,8 +7,8 @@ const FormData = require("form-data");
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Telegram Bot API
-const TELEGRAM_BOT_TOKEN = "8094183012:AAGKQ-s0yU8VTqz0I0v8JE1d0rCiX7MIbjw";
-const TELEGRAM_CHAT_ID = "1767411333"; // Replace with your chat/group ID
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 // Upload Photo Controller
 const uploadPhotoController = async (req, res) => {
