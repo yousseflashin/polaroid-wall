@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/app.js"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "postgresql://postgres.lzhdoejoffdyxbecvnnz:VEaDXf1BY46lI5pX@aws-1-eu-north-1.pooler.supabase.com:5432/postgres",
+    "JWT_SECRET": "a9d758f3d260f948dc5aa342e0b3ccdec33c8a9521663f5d9f98ec9e350dfac0",
+    "TELEGRAM_BOT_TOKEN": "8094183012:AAGKQ-s0yU8VTqz0I0v8JE1d0rCiX7MIbjw",
+    "TELEGRAM_CHAT_ID": "-1002964609292",
+    "userEmail": "youssef.lashin@ieeeypegypt.org",
+    "userPassword": "fniu siur uieb nihf"
+  }
+}
