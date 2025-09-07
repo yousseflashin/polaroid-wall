@@ -20,7 +20,7 @@ model User {
 
 model OTP {
   id        String   @id @default(uuid())
-  email     String
+  email     String   @unique
   otp       String
   expiresAt DateTime
   createdAt DateTime @default(now())

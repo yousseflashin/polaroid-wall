@@ -20,7 +20,15 @@ const app = express();
 const path = require("path");
 
 // Middleware
-app.use(cors());
+// Permissive CORS with credentials and preflight support
+const corsOptions = {
+  origin: (origin, cb) => cb(null, true),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
+app.options('/*splat', cors(corsOptions));
 app.use(
   helmet({
     crossOriginResourcePolicy: false,

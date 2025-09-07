@@ -7,7 +7,7 @@
     "prod": "node app.js",
     "dev": "nodemon app.js",
     "create-migrations": "npx prisma migrate dev --create-only",
-    "migrate": "npx prisma migrate deploy",
+    "migrate": "npx prisma migrate dev --schema=./prisma/schema.prisma",
     "generate": "npx prisma generate --schema=./prisma/schema.prisma"
   },
   "keywords": [],

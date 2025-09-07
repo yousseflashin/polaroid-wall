@@ -28,11 +28,20 @@ async function registerOrLogin(req, res) {
     const otpCode = generateOTP();
     const expiresAt = new Date(Date.now() + OTP_EXPIRATION_MINUTES * 60000);
 
-    // Save OTP in DB
-    await prisma.oTP.create({
-      data: { email, otp: otpCode, expiresAt },
-    });
+    // Save OTP in DB 
+    const userOTP = await prisma.oTP.findUnique({ where: { email } });
+    if (userOTP) {
+      // Update existing OTP
+      await prisma.oTP.update({
+        where: { email },
+        data: { otp: otpCode, expiresAt },
+      });
+    } else {
 
+      await prisma.oTP.create({
+        data: { email, otp: otpCode, expiresAt },
+      });
+    }
     // Send OTP via email
     await sendEmail(
       email,

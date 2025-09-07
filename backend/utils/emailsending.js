@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
 async function sendEmail(to, subject, text, html = null) {
   try {
     const mailOptions = {
-      from: `"Your App Name" <${userEmail}>`,
+      from: `"NASA Space Apps Cairo" <${userEmail}>`,
       to,
       subject,
       text,
