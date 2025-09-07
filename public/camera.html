@@ -1,59 +1,131 @@
-<!-- camera.html (User input page) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snap Your Photo</title>
-  <style>
-    body { text-align: center; font-family: sans-serif; background: #f2f2f2; }
-    video { width: 90%; max-width: 400px; margin-top: 20px; border-radius: 10px; }
-    button { margin-top: 20px; font-size: 1.2rem; padding: 10px 20px; cursor: pointer; }
-    input { margin-top: 10px; padding: 8px; font-size: 1rem; width: 80%; }
-  </style>
+  <meta name="description" content="Capture and share your special moments with Polaroid Wall">
+  <title>Polaroid Camera - Capture Your Moments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/camera-new.css" />
+  <script src="nav.js" defer></script>
 </head>
+
 <body>
-  <h2>Take Your 2 Photos</h2>
-  <video id="video" autoplay></video>
-  <br>
-  <input type="text" id="caption" maxlength="40" placeholder="Optional caption..."/>
-  <br>
-  <button id="snap">Take Photo</button>
-  <p id="status">You have 2 shots.</p>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <i class="fas fa-camera-retro" aria-hidden="true"></i>
+        <h1>Polaroid Camera</h1>
+      </div>
+      <p class="tagline">Capture and share your special moments</p>
+      <button class="nav-btn secondary" id="logoutBtn" aria-label="Logout">
+        <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+      </button>
+    </div>
+  </header>
+
+  <main class="camera-container">
+    <section class="camera-section" aria-labelledby="camera-heading">
+      <h2 id="camera-heading" class="visually-hidden">Camera</h2>
+      <div class="camera-wrapper">
+        <video id="video" autoplay muted playsinline aria-label="Camera feed"></video>
+        <div class="camera-overlay" id="cameraOverlay">
+          <div class="message">
+            <div class="loading-spinner"></div>
+            <p>Starting camera...</p>
+          </div>
+        </div>
+        <div class="camera-controls">
+          <button id="snapBtn" class="btn btn-primary btn-capture" aria-label="Take photo">
+            <i class="fas fa-camera" aria-hidden="true"></i>
+            <span id="snapText">Take Photo</span>
+            <span id="snapLoading" class="loading" style="display: none;"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="camera-settings">
+        <div class="settings-panel">
+          <div class="input-group">
+            <label for="caption" class="input-label">
+              Photo Caption <span class="optional">(Optional)</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="text" id="caption" class="input-field" 
+                     placeholder="Add a caption to your photo..."
+                     maxlength="100" 
+                     aria-label="Photo caption" />
+              <i class="fas fa-pen input-icon"></i>
+            </div>
+          </div>
+
+          <div class="filters-section">
+            <h3 class="filters-title">Photo Filters</h3>
+            <div class="filter-options" role="listbox" aria-label="Photo filters">
+              <button class="filter-option active" data-filter="normal" role="option" aria-selected="true">
+                <span class="filter-preview normal"></span>
+                <span class="filter-name">Normal</span>
+              </button>
+              <button class="filter-option" data-filter="vintage" role="option" aria-selected="false">
+                <span class="filter-preview vintage"></span>
+                <span class="filter-name">Vintage</span>
+              </button>
+              <button class="filter-option" data-filter="blackwhite" role="option" aria-selected="false">
+                <span class="filter-preview blackwhite"></span>
+                <span class="filter-name">B&W</span>
+              </button>
+              <button class="filter-option" data-filter="sepia" role="option" aria-selected="false">
+                <span class="filter-preview sepia"></span>
+                <span class="filter-name">Sepia</span>
+              </button>
+              <button class="filter-option" data-filter="blur" role="option" aria-selected="false">
+                <span class="filter-preview blur"></span>
+                <span class="filter-name">Blur</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="shots-info">
+            <div class="shots-count" id="shotsCount">2</div>
+            <div class="shots-text" id="shotsText">shots remaining</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-section fade-in">
+      <h2 class="preview-title">Photo Preview</h2>
+
+      <div class="preview-container">
+        <img id="preview" class="preview-image" alt="Photo preview" />
+        <div id="previewPlaceholder" class="preview-placeholder">
+          📸 Take a photo to see preview
+        </div>
+      </div>
+
+      <div class="upload-progress" id="uploadProgress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="status-message" id="status"></div>
+
+      <button id="retakeBtn" class="btn btn-secondary" style="display: none; width: 100%; margin-bottom: 15px;">
+        🔄 Retake Photo
+      </button>
+
+      <button id="uploadBtn" class="btn btn-primary" style="display: none; width: 100%;">
+        <span id="uploadText">🚀 Upload Photo</span>
+        <span id="uploadLoading" class="loading" style="display: none;"></span>
+      </button>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const video = document.getElementById('video');
-    const snapBtn = document.getElementById('snap');
-    const captionInput = document.getElementById('caption');
-    const status = document.getElementById('status');
-    const socket = io();
+  <script src="/camera.js"></script>
 
-    let shotsLeft = 2;
-
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => video.srcObject = stream)
-      .catch(err => alert("Camera access denied"));
-
-    snapBtn.onclick = () => {
-      if (shotsLeft <= 0) return;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0);
-
-      const dataUrl = canvas.toDataURL('image/jpeg');
-      socket.emit('new-photo', {
-        img: dataUrl,
-        caption: captionInput.value.trim()
-      });
-
-      shotsLeft--;
-      status.textContent = shotsLeft > 0 ? `You have ${shotsLeft} shot(s) left.` : "No shots left. Thanks!";
-      if (shotsLeft === 0) snapBtn.disabled = true;
-    }
-  </script>
 </body>
+
 </html>
