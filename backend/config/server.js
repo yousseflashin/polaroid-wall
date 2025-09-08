@@ -1,11 +1,15 @@
-// backend/config/index.js
+// backend/config/server.js
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const connectDatabase = require("./db");
 const logger = require("./logger");
 const { ApiError } = require("../utils/apiResponse");
-const { registerOrLogin, verifyOtp, userInfo } = require("../routes/auth.controller");
+const {
+  registerOrLogin,
+  verifyOtp,
+  userInfo,
+} = require("../routes/auth.controller");
 const {
   upload,
   uploadPhotoController,
@@ -35,7 +39,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- Static / view routes (Vercel also serves /public) ---
+// --- Static / view routes ---
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../../public/stage.html"));
 });
@@ -60,7 +64,12 @@ app.use("/api/auth", registerOrLogin);
 app.use("/api/verify", verifyOtp);
 app.use("/api/user", isAuthenticated, userInfo);
 
-app.post("/api/upload", isAuthenticated, upload.single("file"), uploadPhotoController);
+app.post(
+  "/api/upload",
+  isAuthenticated,
+  upload.single("file"),
+  uploadPhotoController
+);
 
 app.get("/api/photos", async (req, res) => {
   try {
@@ -77,29 +86,23 @@ app.get("/api/photos/proxy/:id", proxyTelegramPhoto);
 // --- 404 handler ---
 app.all("/*splat", (req, res) => ApiError(res, "Route not found", 404));
 
-// --- Vercel handler setup ---
-let serverPromise;
+// --- Export for Vercel ---
+let initialized = false;
 
-async function createServer() {
-  if (!serverPromise) {
-    serverPromise = (async () => {
-      if (!global.dbConnected) {
-        await connectDatabase();
-        global.dbConnected = true;
-        logger.info("Database connected.");
-      }
-      return app;
-    })();
-  }
-  return serverPromise;
-}
-
-module.exports = async (req, res) => {
+async function handler(req, res) {
   try {
-    const app = await createServer();
-    app.handle(req, res); // ✅ Express integration for Vercel
+    if (!initialized) {
+      await connectDatabase();
+      initialized = true;
+      logger.info("✅ Database connected.");
+    }
+    return app(req, res); // ✅ directly use express app as handler
   } catch (err) {
     logger.error("Handler error: " + err.message);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
-};
+}
+
+module.exports = handler;
