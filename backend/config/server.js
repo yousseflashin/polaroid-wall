@@ -1,37 +1,207 @@
 // backend/config/server.js
+
+// ================= FLATTENED SERVER.JS =================
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
+const multer = require("multer");
+const axios = require("axios");
+const FormData = require("form-data");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+const winston = require("winston");
+const DailyRotateFile = require("winston-daily-rotate-file");
 
-const connectDatabase = require(process.cwd() + "/backend/config/db.js");
-// const logger = require("./logger");
-// const { ApiError } = require("../utils/apiResponse");
-// const { registerOrLogin, verifyOtp, userInfo } = require("../routes/auth.controller");
-// const {
-//   upload,
-//   uploadPhotoController,
-//   getAllPhotos,
-//   proxyTelegramPhoto,
-// } = require("../routes/photo.controller");
-// // const { specs, swaggerUi } = require("./swagger");
-// const isAuthenticated = require("../middlewares/isAuthenticated");
+// --- Logger ---
+const logFormat = winston.format.combine(
+  winston.format.colorize(),
+  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+  winston.format.printf(({ timestamp, level, message }) => {
+    return `${timestamp} [${level}]: ${message}`;
+  })
+);
+const fileTransport = new DailyRotateFile({
+  filename: "logs/application-%DATE%.log",
+  datePattern: "YYYY-MM-DD",
+  maxSize: "20m",
+  maxFiles: "14d",
+});
+const consoleTransport = new winston.transports.Console({ level: "info" });
+const logger = winston.createLogger({
+  level: "debug",
+  format: logFormat,
+  transports: [fileTransport, consoleTransport],
+  exceptionHandlers: [new DailyRotateFile({ filename: "logs/exceptions-%DATE%.log" })],
+  rejectionHandlers: [new DailyRotateFile({ filename: "logs/rejections-%DATE%.log" })],
+});
 
+// --- Prisma Client ---
+const { PrismaClient } = require("../../node_modules/@prisma/client");
+const prisma =
+  global.prisma ||
+  (global.prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+  }));
+
+// --- DB Connect ---
+async function connectDatabase() {
+  try {
+    await prisma.$connect();
+    logger.info(`✅ Database connected`);
+  } catch (error) {
+    logger.error(`❌ DB connection failed: ${error.message}`);
+  }
+}
+
+// --- Email ---
+const userEmail = process.env.userEmail;
+const userPassword = process.env.userPassword;
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: { user: userEmail, pass: userPassword },
+  tls: { rejectUnauthorized: false },
+});
+async function sendEmail(to, subject, text, html = null) {
+  try {
+    const mailOptions = {
+      from: `"NASA Space Apps Cairo" <${userEmail}>`,
+      to,
+      subject,
+      text,
+      html,
+    };
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent:", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Failed to send email:", error);
+    throw new Error("Failed to send email.");
+  }
+}
+
+// --- Status Codes ---
+const HTTP_200_SUCCESS = 200;
+const HTTP_400_BAD_REQUEST = 400;
+const HTTP_201_CREATED = 201;
+const HTTP_500_INTERNAL_SERVER_ERROR = 500;
+const HTTP_401_UNAUTHORIZED = 401;
+const HTTP_404_NOT_FOUND = 404;
+const HTTP_403_FORBIDDEN = 403;
+
+// --- API Response ---
+const ApiSuccess = (
+  res,
+  data = {},
+  message = "OK",
+  statusCode = HTTP_200_SUCCESS
+) => {
+  const jsonObj = {
+    status: "OK",
+    message,
+  };
+  if (data != {}) jsonObj["data"] = data;
+  return res.status(statusCode).json(jsonObj);
+};
+const ApiError = (res, message, statusCode) => {
+  return res.status(statusCode).json({
+    status: `${statusCode}`.startsWith(4) ? "FAIL" : "ERROR",
+    message: message,
+    statusCode: statusCode,
+  });
+};
+
+// --- Auth Payload ---
+async function getAuthPayload(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    limit: user.limit,
+    photoCount: user.photoCount,
+  };
+}
+
+// --- Generate OTP ---
+function generateOTP() {
+  const otp = crypto.randomInt(100000, 999999);
+  return otp.toString();
+}
+
+// --- Generate Token ---
+const generateToken = async (user, secret, period = "1d") => {
+  const payload = await getAuthPayload(user);
+  return jwt.sign(payload, secret, { expiresIn: period });
+};
+
+// --- Verify Token ---
+const verifyToken = async (token, secret) => {
+  try {
+    const payload = jwt.verify(token, secret);
+    return payload;
+  } catch (error) {
+    logger.error(`Token verification error: ${error.message}`);
+    return null;
+  }
+};
+
+// --- Auth Middleware ---
+const isAuthenticated = async (req, res, next) => {
+  try {
+    if (!req.headers.authorization) {
+      return ApiError(res, "Unauthorized: token is not provided", HTTP_401_UNAUTHORIZED);
+    }
+    const token = req.headers.authorization.split(" ")[1];
+    if (!process.env.JWT_SECRET) {
+      return ApiError(res, "Server configuration error", 500);
+    }
+    const payload = await verifyToken(token, process.env.JWT_SECRET);
+    if (!payload) {
+      return ApiError(res, "Unauthorized: token is invalid", HTTP_401_UNAUTHORIZED);
+    }
+    const user_id = payload.id;
+    const user = await prisma.user.findUnique({ where: { id: user_id } });
+    if (!user) {
+      return ApiError(res, "Unauthorized: user does not exist", HTTP_401_UNAUTHORIZED);
+    }
+    if (user.is_active === false) {
+      return ApiError(res, "Unauthorized: user is not active", HTTP_401_UNAUTHORIZED);
+    }
+    req.user = user;
+    next();
+  } catch (error) {
+    return ApiError(res, "Authentication error", 500);
+  }
+};
+
+// --- Multer for Uploads ---
+const upload = multer({ storage: multer.memoryStorage() });
+
+// --- Telegram Bot API ---
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+// --- Express App ---
 const app = express();
-
-// --- Middleware ---
 app.use(cors());
 app.use(
-  helmet({
-    crossOriginResourcePolicy: false,
-  })
+  helmet({ crossOriginResourcePolicy: false })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --- Static assets ---
 const publicDir = path.join(process.cwd(), "public");
-app.use("/public", express.static(publicDir)); // ✅ serve CSS/JS
+app.use("/public", express.static(publicDir));
 
 // --- Static pages ---
 app.get("/", (req, res) => res.sendFile(path.join(publicDir, "stage.html")));
@@ -40,35 +210,158 @@ app.get("/camera", (req, res) => res.sendFile(path.join(publicDir, "camera.html"
 app.get("/login", (req, res) => res.sendFile(path.join(publicDir, "login.html")));
 app.get("/qr", (req, res) => res.sendFile(path.join(publicDir, "qr.html")));
 
-// --- Swagger docs ---
-// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+// --- Auth/Register/Login ---
+const OTP_EXPIRATION_MINUTES = 5;
+app.post("/api/auth", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return ApiError(res, "Email is required", HTTP_400_BAD_REQUEST);
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      user = await prisma.user.create({ data: { email } });
+    }
+    const otpCode = generateOTP();
+    const expiresAt = new Date(Date.now() + OTP_EXPIRATION_MINUTES * 60000);
+    const userOTP = await prisma.oTP.findUnique({ where: { email } });
+    if (userOTP) {
+      await prisma.oTP.update({ where: { email }, data: { otp: otpCode, expiresAt } });
+    } else {
+      await prisma.oTP.create({ data: { email, otp: otpCode, expiresAt } });
+    }
+    await sendEmail(
+      email,
+      "Your OTP Code",
+      `Your OTP code is: ${otpCode}. It is valid for ${OTP_EXPIRATION_MINUTES} minutes.`
+    );
+    return ApiSuccess(res, `OTP sent to ${email}. Valid for ${OTP_EXPIRATION_MINUTES} minutes.`, HTTP_200_SUCCESS);
+  } catch (err) {
+    console.error("registerOrLogin error:", err);
+    return ApiError(res, "Something went wrong", HTTP_500_INTERNAL_SERVER_ERROR);
+  }
+});
 
-// --- API routes ---
-// app.use("/api/auth", registerOrLogin);
-// app.use("/api/verify", verifyOtp);
-// app.use("/api/user", isAuthenticated, userInfo);
+app.post("/api/verify", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp)
+      return ApiError(res, "Email and OTP required", HTTP_400_BAD_REQUEST);
+    const otpRecord = await prisma.oTP.findFirst({
+      where: { email, otp },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!otpRecord || otpRecord.expiresAt < new Date()) {
+      return ApiError(res, "Invalid or expired OTP", HTTP_400_BAD_REQUEST);
+    }
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return ApiError(res, "User not found", HTTP_400_BAD_REQUEST);
+    const tokenPayload = { id: user.id, role: user.role };
+    const token = await generateToken(tokenPayload, process.env.JWT_SECRET, "1d");
+    return ApiSuccess(res, { message: "Login successful", token, user: { id: user.id, email: user.email, role: user.role, limit: user.limit, photoCount: user.photoCount } }, HTTP_200_SUCCESS);
+  } catch (err) {
+    console.error("verifyOtp error:", err);
+    return ApiError(res, "Something went wrong", HTTP_500_INTERNAL_SERVER_ERROR);
+  }
+});
 
-// app.post("/api/upload", isAuthenticated, upload.single("file"), uploadPhotoController);
+app.get("/api/user", isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return ApiError(res, "User not found", HTTP_400_BAD_REQUEST);
+    return ApiSuccess(res, { user: { id: user.id, email: user.email, role: user.role, limit: user.limit, photoCount: user.photoCount } }, HTTP_200_SUCCESS);
+  } catch (err) {
+    return ApiError(res, "Something went wrong", HTTP_500_INTERNAL_SERVER_ERROR);
+  }
+});
 
-// app.get("/api/photos", async (req, res) => {
-//   try {
-//     const photos = await getAllPhotos();
-//     res.json({ success: true, photos });
-//   } catch (err) {
-//     logger.error("Photos error: " + err.message);
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// });
+// --- Photo Upload ---
+app.post("/api/upload", isAuthenticated, upload.single("file"), async (req, res) => {
+  try {
+    const { id: user_id } = req.user;
+    const caption = req.body.caption || "";
+    const user = await prisma.user.findUnique({ where: { id: user_id } });
+    if (!user) return res.status(400).json({ error: "User not found" });
+    if (user.limit <= 0) {
+      return res.status(403).json({ error: "Photo upload limit reached" });
+    }
+    const fileObject = req.file;
+    if (!fileObject) return res.status(400).json({ error: "No file uploaded" });
+    const formData = new FormData();
+    formData.append("chat_id", TELEGRAM_CHAT_ID);
+    formData.append("photo", fileObject.buffer, {
+      filename: fileObject.originalname,
+      contentType: fileObject.mimetype,
+    });
+    if (caption) formData.append("caption", caption);
+    const telegramRes = await axios.post(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
+      formData,
+      { headers: formData.getHeaders() }
+    );
+    if (!telegramRes.data.ok)
+      throw new Error("Telegram API error: " + JSON.stringify(telegramRes.data));
+    const fileId = telegramRes.data.result.photo.pop().file_id;
+    const photo = await prisma.photo.create({
+      data: {
+        userId: user_id,
+        driveId: fileId,
+        caption: caption,
+        link: `https://t.me/PhotoUploader2026_bot?start=${fileId}`,
+      },
+    });
+    await prisma.user.update({
+      where: { id: user_id },
+      data: { limit: { decrement: 1 }, photoCount: { increment: 1 } }
+    });
+    res.json({ success: true, photo });
+  } catch (err) {
+    console.error("Upload error:", err);
+    res.status(500).json({ error: "Failed to upload photo", details: err.message });
+  }
+});
 
-// app.get("/api/photos/proxy/:id", proxyTelegramPhoto);
+// --- Get All Photos ---
+app.get("/api/photos", async (req, res) => {
+  try {
+    const photos = await prisma.photo.findMany({ orderBy: { createdAt: 'desc' } });
+    res.json({
+      success: true, photos: photos.map(p => ({
+        id: p.id,
+        driveId: p.driveId,
+        userId: p.userId,
+        caption: p.caption || "",
+      }))
+    });
+  } catch (err) {
+    logger.error("Photos error: " + err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// --- Proxy Telegram Photo ---
+app.get("/api/photos/proxy/:id", async (req, res) => {
+  try {
+    const fileId = req.params.id;
+    const fileRes = await axios.get(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`
+    );
+    if (!fileRes.data.ok) return res.status(400).json({ error: "Invalid Telegram file ID" });
+    const filePath = fileRes.data.result.file_path;
+    const telegramFileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+    const response = await axios.get(telegramFileUrl, { responseType: "stream" });
+    res.setHeader("Content-Type", response.headers["content-type"]);
+    response.data.pipe(res);
+  } catch (err) {
+    console.error("Proxy error:", err);
+    res.status(500).json({ error: "Failed to fetch photo" });
+  }
+});
 
 // --- 404 handler ---
-// app.all("/*splat", (req, res) => ApiError(res, "Route not found", 404));
+app.all("/*splat", (req, res) => ApiError(res, "Route not found", 404));
 
 // --- Connect database immediately on import (synchronous init) ---
-connectDatabase()
-  .then(() => logger.info("✅ Database connected"))
-  .catch((err) => logger.error("❌ DB connection failed: " + err.message));
+connectDatabase();
 
 // --- Export Express app for Vercel ---
 module.exports = app;
