@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/camera-new.css" />
-  <script src="nav.js" defer></script>
+  <link rel="stylesheet" href="/public/camera.css" />
+  <script src="/public/nav.js" defer></script>
 </head>
 
 <body>
@@ -54,10 +55,8 @@
               Photo Caption <span class="optional">(Optional)</span>
             </label>
             <div class="input-wrapper">
-              <input type="text" id="caption" class="input-field" 
-                     placeholder="Add a caption to your photo..."
-                     maxlength="100" 
-                     aria-label="Photo caption" />
+              <input type="text" id="caption" class="input-field" placeholder="Add a caption to your photo..."
+                maxlength="100" aria-label="Photo caption" />
               <i class="fas fa-pen input-icon"></i>
             </div>
           </div>
@@ -94,37 +93,36 @@
           </div>
         </div>
       </div>
-    </div>
+      </div>
 
-    <div class="preview-section fade-in">
-      <h2 class="preview-title">Photo Preview</h2>
+      <div class="preview-section fade-in">
+        <h2 class="preview-title">Photo Preview</h2>
 
-      <div class="preview-container">
-        <img id="preview" class="preview-image" alt="Photo preview" />
-        <div id="previewPlaceholder" class="preview-placeholder">
-          📸 Take a photo to see preview
+        <div class="preview-container">
+          <img id="preview" class="preview-image" alt="Photo preview" />
+          <div id="previewPlaceholder" class="preview-placeholder">
+            📸 Take a photo to see preview
+          </div>
         </div>
+
+        <div class="upload-progress" id="uploadProgress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="status-message" id="status"></div>
+
+        <button id="retakeBtn" class="btn btn-secondary" style="display: none; width: 100%; margin-bottom: 15px;">
+          🔄 Retake Photo
+        </button>
+
+        <button id="uploadBtn" class="btn btn-primary" style="display: none; width: 100%;">
+          <span id="uploadText">🚀 Upload Photo</span>
+          <span id="uploadLoading" class="loading" style="display: none;"></span>
+        </button>
+      </div>
       </div>
 
-      <div class="upload-progress" id="uploadProgress">
-        <div class="progress-bar" id="progressBar"></div>
-      </div>
-
-      <div class="status-message" id="status"></div>
-
-      <button id="retakeBtn" class="btn btn-secondary" style="display: none; width: 100%; margin-bottom: 15px;">
-        🔄 Retake Photo
-      </button>
-
-      <button id="uploadBtn" class="btn btn-primary" style="display: none; width: 100%;">
-        <span id="uploadText">🚀 Upload Photo</span>
-        <span id="uploadLoading" class="loading" style="display: none;"></span>
-      </button>
-    </div>
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/camera.js"></script>
+      <script src="/public/camera.js"></script>
 
 </body>
 

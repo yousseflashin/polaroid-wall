@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/qr.css" />
-  <script src="nav.js" defer></script>
+  <link rel="stylesheet" href="/public/qr.css" />
+  <script src="/public/nav.js" defer></script>
 </head>
 
 <body>
@@ -22,8 +23,8 @@
       </div>
       <nav class="header-nav">
         <a href="/" class="nav-link">Gallery</a>
-        <a href="/camera" class="nav-link active">Camera</a>
-        <a href="/qr" class="nav-link">QR Code</a>
+        <a href="/public/camera" class="nav-link active">Camera</a>
+        <a href="/public/qr" class="nav-link">QR Code</a>
       </nav>
     </div>
   </header>
@@ -95,7 +96,7 @@
       </div>
 
       <div class="action-buttons">
-        <a href="/camera" class="btn btn-primary">
+        <a href="/public/camera" class="btn btn-primary">
           <i class="fas fa-camera" aria-hidden="true"></i>
           Open Camera Directly
         </a>
@@ -109,6 +110,7 @@
 
   <div class="toast" id="toast">URL copied to clipboard!</div>
 
-  <script src="/qr.js" defer></script>
+  <script src="/public/qr.js" defer></script>
 </body>
+
 </html>
