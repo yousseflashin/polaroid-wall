@@ -30,8 +30,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --- Static assets ---
-// const publicDir = path.join(process.cwd(), "public");
-// app.use("/public", express.static(publicDir)); // ✅ serve CSS/JS
+const publicDir = path.join(process.cwd(), "public");
+app.use("/public", express.static(publicDir)); // ✅ serve CSS/JS
 
 // --- Static pages ---
 app.get("/", (req, res) => res.sendFile(path.join(publicDir, "stage.html")));
