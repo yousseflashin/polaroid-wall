@@ -27,5 +27,6 @@
     "TELEGRAM_CHAT_ID": "-1002964609292",
     "userEmail": "youssef.lashin@ieeeypegypt.org",
     "userPassword": "fniu siur uieb nihf"
-  }
+  },
+  "buildCommand": "npm i"
 }
