@@ -1,2 +1,5 @@
 require("dotenv").config();
-require("./backend/config/server");
+const app = require("./backend/config/server");
+
+// Vercel expects a default export
+module.exports = app;
