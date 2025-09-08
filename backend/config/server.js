@@ -5,17 +5,17 @@ const helmet = require("helmet");
 const path = require("path");
 
 // const connectDatabase = require("./db");
-const logger = require("./logger");
+// const logger = require("./logger");
 // const { ApiError } = require("../utils/apiResponse");
-const { registerOrLogin, verifyOtp, userInfo } = require("../routes/auth.controller");
-const {
-  upload,
-  uploadPhotoController,
-  getAllPhotos,
-  proxyTelegramPhoto,
-} = require("../routes/photo.controller");
-// const { specs, swaggerUi } = require("./swagger");
-const isAuthenticated = require("../middlewares/isAuthenticated");
+// const { registerOrLogin, verifyOtp, userInfo } = require("../routes/auth.controller");
+// const {
+//   upload,
+//   uploadPhotoController,
+//   getAllPhotos,
+//   proxyTelegramPhoto,
+// } = require("../routes/photo.controller");
+// // const { specs, swaggerUi } = require("./swagger");
+// const isAuthenticated = require("../middlewares/isAuthenticated");
 
 const app = express();
 
