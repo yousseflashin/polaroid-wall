@@ -4,7 +4,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
 
-// const connectDatabase = require("./db");
+const connectDatabase = require("./db");
 // const logger = require("./logger");
 // const { ApiError } = require("../utils/apiResponse");
 // const { registerOrLogin, verifyOtp, userInfo } = require("../routes/auth.controller");
@@ -66,9 +66,9 @@ app.get("/qr", (req, res) => res.sendFile(path.join(publicDir, "qr.html")));
 // app.all("/*splat", (req, res) => ApiError(res, "Route not found", 404));
 
 // --- Connect database immediately on import (synchronous init) ---
-// connectDatabase()
-//   .then(() => logger.info("✅ Database connected"))
-//   .catch((err) => logger.error("❌ DB connection failed: " + err.message));
+connectDatabase()
+  .then(() => logger.info("✅ Database connected"))
+  .catch((err) => logger.error("❌ DB connection failed: " + err.message));
 
 // --- Export Express app for Vercel ---
 module.exports = app;
