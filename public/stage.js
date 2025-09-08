@@ -34,7 +34,7 @@ class StageWall {
           this.addPhoto({
             img: `/api/photos/proxy/${photo.driveId}`,
             caption: photo.caption || '',
-            key: photo.id // use unique DB ID
+            key: photo.id
           }, false);
         });
       }
@@ -43,7 +43,11 @@ class StageWall {
       console.error(err);
       this.loading.style.display = 'none';
     }
+
+    // 🔁 keep polling every 30s
+    setTimeout(() => this.loadExistingPhotos(), 30000);
   }
+
 
   addPhoto(data, isNew = false) {
     if (this.photos.has(data.key)) return;
