@@ -66,9 +66,9 @@ app.get("/api/photos/proxy/:id", proxyTelegramPhoto);
 app.all("/*splat", (req, res) => ApiError(res, "Route not found", 404));
 
 // --- Connect database immediately on import (synchronous init) ---
-connectDatabase()
-  .then(() => logger.info("✅ Database connected"))
-  .catch((err) => logger.error("❌ DB connection failed: " + err.message));
+// connectDatabase()
+//   .then(() => logger.info("✅ Database connected"))
+//   .catch((err) => logger.error("❌ DB connection failed: " + err.message));
 
 // --- Export Express app for Vercel ---
 module.exports = app;
