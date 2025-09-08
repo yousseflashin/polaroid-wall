@@ -30,8 +30,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --- Static assets ---
-const publicDir = path.join(process.cwd(), "public");
-app.use("/public", express.static(publicDir)); // ✅ serve CSS/JS
+// const publicDir = path.join(process.cwd(), "public");
+// app.use("/public", express.static(publicDir)); // ✅ serve CSS/JS
 
 // --- Static pages ---
 app.get("/", (req, res) => res.sendFile(path.join(publicDir, "stage.html")));
@@ -63,7 +63,7 @@ app.get("/api/photos", async (req, res) => {
 app.get("/api/photos/proxy/:id", proxyTelegramPhoto);
 
 // --- 404 handler ---
-app.all("/*splat", (req, res) => ApiError(res, "Route not found", 404));
+// app.all("/*splat", (req, res) => ApiError(res, "Route not found", 404));
 
 // --- Connect database immediately on import (synchronous init) ---
 // connectDatabase()
