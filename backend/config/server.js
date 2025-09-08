@@ -4,7 +4,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
 
-const connectDatabase = require("/backend/config/db");
+const connectDatabase = require(process.cwd() + "/backend/config/db.js");
 // const logger = require("./logger");
 // const { ApiError } = require("../utils/apiResponse");
 // const { registerOrLogin, verifyOtp, userInfo } = require("../routes/auth.controller");
