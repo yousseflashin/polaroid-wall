@@ -1,4 +1,4 @@
-// api/index.js
+// backend/config/index.js
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -80,14 +80,20 @@ app.get("/api/photos/proxy/:id", proxyTelegramPhoto);
 app.all("/*splat", (req, res) => ApiError(res, "Route not found", 404));
 
 // Export for Vercel
+async function createServer() {
+  if (!global.dbConnected) {
+    await connectDatabase();
+    global.dbConnected = true;
+    logger.info("Database connected.");
+  }
+  return app;
+}
+
+// Export a handler for Vercel
 module.exports = async (req, res) => {
   try {
-    if (!global.dbConnected) {
-      await connectDatabase();
-      global.dbConnected = true;
-      logger.info("Database connected.");
-    }
-    return app(req, res);
+    const server = await createServer();
+    return server(req, res);
   } catch (err) {
     logger.error("Handler error: " + err.message);
     res.status(500).json({ success: false, message: "Internal Server Error" });
