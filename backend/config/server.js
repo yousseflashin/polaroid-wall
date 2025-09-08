@@ -4,9 +4,9 @@ const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
 
-const connectDatabase = require("./db");
+// const connectDatabase = require("./db");
 const logger = require("./logger");
-const { ApiError } = require("../utils/apiResponse");
+// const { ApiError } = require("../utils/apiResponse");
 const { registerOrLogin, verifyOtp, userInfo } = require("../routes/auth.controller");
 const {
   upload,
@@ -14,7 +14,7 @@ const {
   getAllPhotos,
   proxyTelegramPhoto,
 } = require("../routes/photo.controller");
-const { specs, swaggerUi } = require("./swagger");
+// const { specs, swaggerUi } = require("./swagger");
 const isAuthenticated = require("../middlewares/isAuthenticated");
 
 const app = express();
@@ -41,26 +41,26 @@ app.get("/login", (req, res) => res.sendFile(path.join(publicDir, "login.html"))
 app.get("/qr", (req, res) => res.sendFile(path.join(publicDir, "qr.html")));
 
 // --- Swagger docs ---
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 // --- API routes ---
-app.use("/api/auth", registerOrLogin);
-app.use("/api/verify", verifyOtp);
-app.use("/api/user", isAuthenticated, userInfo);
+// app.use("/api/auth", registerOrLogin);
+// app.use("/api/verify", verifyOtp);
+// app.use("/api/user", isAuthenticated, userInfo);
 
-app.post("/api/upload", isAuthenticated, upload.single("file"), uploadPhotoController);
+// app.post("/api/upload", isAuthenticated, upload.single("file"), uploadPhotoController);
 
-app.get("/api/photos", async (req, res) => {
-  try {
-    const photos = await getAllPhotos();
-    res.json({ success: true, photos });
-  } catch (err) {
-    logger.error("Photos error: " + err.message);
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
+// app.get("/api/photos", async (req, res) => {
+//   try {
+//     const photos = await getAllPhotos();
+//     res.json({ success: true, photos });
+//   } catch (err) {
+//     logger.error("Photos error: " + err.message);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
 
-app.get("/api/photos/proxy/:id", proxyTelegramPhoto);
+// app.get("/api/photos/proxy/:id", proxyTelegramPhoto);
 
 // --- 404 handler ---
 // app.all("/*splat", (req, res) => ApiError(res, "Route not found", 404));
